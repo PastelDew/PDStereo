@@ -87,7 +87,7 @@ class InjeAIConfig(Config):
         self.EPOCH = epoch
         self.STEPS_PER_EPOCH = steps_per_epoch
         self.LEARNING_RATE = learning_rate
-        super()
+        super(InjeAIConfig, self).__init__()
 
     ## Custom config by pasteldew
     #BACKBONE = "resnet50"
