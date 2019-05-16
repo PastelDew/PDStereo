@@ -3,4 +3,6 @@
 build/
 dist/
 PDStereo.egg-info/
-temp/
+temp/datasets/
+temp/renameScript/
+temp/StereoFiles/
