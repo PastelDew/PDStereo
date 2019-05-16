@@ -7,3 +7,4 @@ temp/datasets/
 temp/renameScript/
 temp/StereoFiles/
 __pychche__/
+*.pyc
