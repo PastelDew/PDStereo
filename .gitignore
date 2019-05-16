@@ -6,3 +6,4 @@ PDStereo.egg-info/
 temp/datasets/
 temp/renameScript/
 temp/StereoFiles/
+__pychche__/
