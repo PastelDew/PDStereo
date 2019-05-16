@@ -1,1 +1,0 @@
-powershell.exe -noprofile -executionpolicy bypass -file .\Rename.ps1

@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "D:\\Dev\\Library\\python35\\python.exe",
-    "python.linting.pylintPath": "~/.virtualenvs/evernote/bin/python:lib",
-    "python.jediEnabled": false
-}
