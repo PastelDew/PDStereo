@@ -1,18 +1,16 @@
 import sys
 from QtUI import QtMain
+from QtApp.MainWindow import MainWindow
 from PyQt5.QtWidgets import QMainWindow, QApplication
-
-from CtrlMain import CtrlMain as CMain
 
 def runApplication():
     app = QApplication(sys.argv)
 
-    mainWindow = QMainWindow()
+    mainWindow = MainWindow()
     mainForm = QtMain.Ui_MainWindow()
     mainForm.setupUi(mainWindow)
     mainForm.retranslateUi(mainWindow)
-
-    cMain = CMain(mainForm)
+    mainWindow.initialize(mainForm)
 
     mainWindow.show()
     return app.exec_()
