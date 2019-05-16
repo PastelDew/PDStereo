@@ -5,8 +5,8 @@ from QtApp.QtUI.QtMain import Ui_MainWindow
 from PyQt5.QtCore import *
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PDStereo import CameraInfo
-from PDStereo.Stereo import Stereo
+from PDStereo.Camera import CameraInfo
+from PDStereo.Camera.Stereo import Stereo
 
 import qimage2ndarray
 
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         self.leftFrame = None
         self.rightFrame = None
 
-        self.stereo = Stereo("StereoFiles")
+        self.stereo = Stereo("temp/StereoFiles")
 
         #Threads
         self.thread_cam = Worker(target=self.thread_cam_run)

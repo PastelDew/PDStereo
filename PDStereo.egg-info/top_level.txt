@@ -1,3 +1,2 @@
-InjeAI
 PDStereo
 mrcnn

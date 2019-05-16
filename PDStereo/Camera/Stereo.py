@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-import PDStereo.Calibration as cb
-import PDStereo.Utils as ut
+import PDStereo.Camera.Calibration as cb
+import PDStereo.Camera.Utils as ut
 import os
 import json
 import matplotlib.pyplot as plt

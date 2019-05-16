@@ -31,8 +31,8 @@ from os import listdir
 from os.path import isfile, join
 import xml.etree.ElementTree as et
 
-from InjeAI.config import InjeAIConfig
-from InjeAI.dataset import InjeAIDataset
+from PDStereo.InjeAI.config import InjeAIConfig
+from PDStereo.InjeAI.dataset import InjeAIDataset
 
 import tensorflow as tf
 from keras import backend as k
