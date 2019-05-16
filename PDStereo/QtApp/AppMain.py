@@ -1,7 +1,9 @@
 import sys
-from QtUI import QtMain
-from QtApp.MainWindow import MainWindow
+import os
+
 from PyQt5.QtWidgets import QMainWindow, QApplication
+from PDStereo.QtApp.QtUI import QtMain
+from PDStereo.QtApp.MainWindow import MainWindow
 
 def runApplication():
     app = QApplication(sys.argv)

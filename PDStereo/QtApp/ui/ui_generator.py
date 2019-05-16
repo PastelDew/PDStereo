@@ -1,3 +1,5 @@
+# Use .ui files made by using pyqt5designer
+
 import os
 from os.path import join
 import sys

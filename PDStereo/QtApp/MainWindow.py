@@ -1,10 +1,10 @@
 import cv2
 from datetime import datetime
 
-from QtApp.QtUI.QtMain import Ui_MainWindow
 from PyQt5.QtCore import *
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication
+from PDStereo.QtApp.QtUI.QtMain import Ui_MainWindow
 from PDStereo.Camera import CameraInfo
 from PDStereo.Camera.Stereo import Stereo
 
@@ -13,7 +13,7 @@ import qimage2ndarray
 class MainWindow(QMainWindow):
     def initialize(self, mainForm: Ui_MainWindow):
         self.mainForm = mainForm
-
+        
         #Connect events
         mainForm.spinBox_cam_left.valueChanged.connect(self.event_spinBox_cam_left_changed)
         mainForm.spinBox_cam_right.valueChanged.connect(self.event_spinBox_cam_right_changed)

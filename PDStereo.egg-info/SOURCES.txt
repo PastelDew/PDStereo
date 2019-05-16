@@ -14,6 +14,10 @@ PDStereo/InjeAI/InjeAI.py
 PDStereo/InjeAI/__init__.py
 PDStereo/InjeAI/config.py
 PDStereo/InjeAI/dataset.py
+PDStereo/QtApp/AppMain.py
+PDStereo/QtApp/ImageDialog.py
+PDStereo/QtApp/MainWindow.py
+PDStereo/QtApp/__init__.py
 mrcnn/__init__.py
 mrcnn/config.py
 mrcnn/model.py

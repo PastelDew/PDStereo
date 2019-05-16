@@ -128,6 +128,12 @@ border-color: rgb(0, 0, 0);</string>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="minimumSize">
+    <size>
+     <width>220</width>
+     <height>38</height>
+    </size>
+   </property>
    <property name="styleSheet">
     <string notr="true">background-color: rgb(255, 255, 255);</string>
    </property>
@@ -210,9 +216,9 @@ border-color: rgb(0, 0, 0);</string>
           <widget class="QWidget" name="verticalLayoutWidget_2">
            <property name="geometry">
             <rect>
-             <x>0</x>
+             <x>10</x>
              <y>20</y>
-             <width>202</width>
+             <width>181</width>
              <height>71</height>
             </rect>
            </property>
