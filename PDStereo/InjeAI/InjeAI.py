@@ -52,7 +52,7 @@ COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 # through the command line argument --logs
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
-def load_Class(dataset_dir):
+def load_class(dataset_dir):
     # annotation file paths which are xml
     annotation_dir = join(dataset_dir, "annotations")
     annotations = [join(dataset_dir, "annotations", f)

@@ -160,7 +160,7 @@ class Stereo():
         right_img_remap_blur = cv2.medianBlur(right_img_remap, 5)
         left_img_remap_gray = cv2.cvtColor(left_img_remap_blur, cv2.COLOR_BGR2GRAY)
         right_img_remap_gray = cv2.cvtColor(right_img_remap_blur, cv2.COLOR_BGR2GRAY)
-
+        
         window_size = 11
         lmbda = 20000
         sigma = 1.0

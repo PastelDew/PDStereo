@@ -1,5 +1,7 @@
 import cv2
 from datetime import datetime
+import os
+import numpy as np
 
 from PyQt5.QtCore import *
 from PyQt5 import QtGui, QtWidgets
@@ -7,6 +9,8 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 from PDStereo.QtApp.QtUI.QtMain import Ui_MainWindow
 from PDStereo.Camera import CameraInfo
 from PDStereo.Camera.Stereo import Stereo
+from PDStereo.QtApp.Detector import Detector
+from PDStereo.InjeAI import InjeAI
 
 import qimage2ndarray
 
@@ -15,31 +19,77 @@ class MainWindow(QMainWindow):
         self.mainForm = mainForm
         
         #Connect events
+        mainForm.actionExit.triggered.connect(self.close)
+
         mainForm.spinBox_cam_left.valueChanged.connect(self.event_spinBox_cam_left_changed)
         mainForm.spinBox_cam_right.valueChanged.connect(self.event_spinBox_cam_right_changed)
+
         mainForm.btn_callibration.clicked.connect(self.event_callibration_clicked)
         mainForm.btn_stereoCallibration.clicked.connect(self.event_stereoCallibration_clicked)
+        mainForm.btn_camcnt_refresh.clicked.connect(self.event_btn_camcnt_refresh)
+        mainForm.btn_detect_rgb.clicked.connect(self.event_btn_detect_rgb_clicked)
+        mainForm.btn_detect_rgbd.clicked.connect(self.event_btn_detect_rgbd_clicked)
+
         mainForm.spinBox_corner_X.valueChanged.connect(self.event_spinBox_chessboard_size_changed)
         mainForm.spinBox_corner_Y.valueChanged.connect(self.event_spinBox_chessboard_size_changed)
+
+        #Init Scroll View
+        mainForm.scrollArea = QtWidgets.QScrollArea(mainForm.groupBox_Colors)
+        itemRect = QRect(
+            10, 20,
+            mainForm.groupBox_Colors.width() - 20,
+            mainForm.groupBox_Colors.height() - 30
+        )
+        mainForm.scrollArea.setGeometry(itemRect)
+        mainForm.scrollArea.setWidgetResizable(True)
+        mainForm.scrollArea.setObjectName("scrollArea")
+        mainForm.gridLayoutWidget = QtWidgets.QWidget()
+        mainForm.gridLayoutWidget.setGeometry(itemRect)
+        mainForm.gridLayoutWidget.setObjectName("gridLayoutWidget")
+        mainForm.gridLayout_Colors = QtWidgets.QGridLayout(mainForm.gridLayoutWidget)
+        mainForm.gridLayout_Colors.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        mainForm.gridLayout_Colors.setContentsMargins(0, 0, 0, 0)
+        mainForm.gridLayout_Colors.setVerticalSpacing(0)
+        mainForm.gridLayout_Colors.setObjectName("gridLayout_Colors")
+        mainForm.scrollArea.setWidget(mainForm.gridLayoutWidget)
+        mainForm.gridLayout_Colors.setColumnStretch(0, 2)
+        mainForm.gridLayout_Colors.setColumnStretch(2, 3)
 
         #Init Corner Size
         self.event_spinBox_chessboard_size_changed()
 
-        self.available_cam_count = CameraInfo.getAvailableCameraCount()
-        mainForm.label_available_cam_count.setText(str(self.available_cam_count))
-        mainForm.spinBox_cam_left.setMaximum(self.available_cam_count)
-        mainForm.spinBox_cam_right.setMaximum(self.available_cam_count)
+        #Init Cam Count
+        self.event_btn_camcnt_refresh()
 
         self.left_cam = None
         self.right_cam = None
-        self.isProcessing = False
-        self.isCallibrating = False
-        self.isStereoCallibrating = False
-        self.imgVisibleCnt = 0
         self.leftFrame = None
         self.rightFrame = None
 
-        self.stereo = Stereo("temp/StereoFiles")
+        self.fileDialog = QtWidgets.QFileDialog()
+        self.fileDialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        self.fileDialog.setNameFilter("Weights File (*.h5)")
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+
+        self.isDisparityProcessing = False
+        self.isCallibrating = False
+        self.isStereoCallibrating = False
+        self.isRemapping = False
+        self.imgVisibleCnt = 0
+        self.detectMode = 0
+        self.remapResult = None
+        self.weightPath_RGB = None
+        self.weightPath_RGBD = None
+
+        self.detector = Detector(InjeAI.load_class("DL/datasets/objects/rgbd/"))
+        labels = self.detector.class_names[1:]
+        colors = self.detector.colors
+        self.drawColorMapToGridLayout(labels, colors)
+
+        self.stereo = Stereo("DL/StereoFiles")
+        self.savedImageDir = "DL/SavedImages"
+        
 
         #Threads
         self.thread_cam = Worker(target=self.thread_cam_run)
@@ -47,6 +97,9 @@ class MainWindow(QMainWindow):
 
         self.thread_mapping = Worker(target=self.thread_mapping_run)
         self.thread_mapping.start()
+
+        self.thread_detecting = Worker(target=self.thread_detecting_run)
+        self.thread_detecting.start()
     
     def closeEvent(self, e):
         self.thread_cam.isWorking = False
@@ -56,6 +109,40 @@ class MainWindow(QMainWindow):
         if self.right_cam != None:
             self.right_cam.release()
         cv2.destroyAllWindows()
+
+    def event_btn_camcnt_refresh(self):
+        self.available_cam_count = CameraInfo.getAvailableCameraCount()
+        self.mainForm.label_available_cam_count.setText(str(self.available_cam_count))
+        self.mainForm.spinBox_cam_left.setMaximum(self.available_cam_count)
+        self.mainForm.spinBox_cam_right.setMaximum(self.available_cam_count)
+
+    def event_btn_detect_rgb_clicked(self):
+        if self.detectMode == 1:
+            return
+        if self.weightPath_RGB is None:
+            if not self.fileDialog.exec_():
+                return
+            self.weightPath_RGB = self.fileDialog.selectedFiles()[0]
+        self.detectMode = 0
+        while self.detector.isDetecting:
+            QThread.sleep(1)
+        self.detector.load_weights(self.weightPath_RGB, channel=3)
+        self.mainForm.label_detecting.setText(os.path.basename(self.weightPath_RGB))
+        self.detectMode = 1
+
+    def event_btn_detect_rgbd_clicked(self):
+        if self.detectMode == 2:
+            return
+        if self.weightPath_RGBD is None:
+            if not self.fileDialog.exec_():
+                return
+            self.weightPath_RGBD = self.fileDialog.selectedFiles()[0]
+        self.detectMode = 0
+        while self.detector.isDetecting:
+            QThread.sleep(1)
+        self.detector.load_weights(self.weightPath_RGBD, channel=4)
+        self.mainForm.label_detecting.setText(os.path.basename(self.weightPath_RGBD))
+        self.detectMode = 2
 
     def event_spinBox_cam_left_changed(self):
         if self.left_cam != None:
@@ -90,6 +177,29 @@ class MainWindow(QMainWindow):
     def event_stereoCallibration_clicked(self):
         self.isStereoCallibrating = True
 
+    def drawColorMapToGridLayout(self, labels, colors):
+        for i in reversed(range(self.mainForm.gridLayout_Colors.count())):
+            item = self.mainForm.gridLayout_Colors.itemAt(i).widget()
+            self.mainForm.gridLayout_Colors.removeWidget(item)
+            item.deleteLater()
+        
+        for i in range(len(labels)):
+            label = labels[i]
+            color = colors[label]
+            color_for_cv = tuple([int(255 * c) for c in color[::-1]])
+            blank_image = np.ones((8, 8, 3), np.uint8)
+            blank_image = blank_image * color_for_cv
+            blank_image = qimage2ndarray.array2qimage(blank_image)
+            pixmap = QtGui.QPixmap(blank_image)
+
+            label_color = QtWidgets.QLabel()
+            label_color.setPixmap(pixmap)
+            label_text = QtWidgets.QLabel()
+            label_text.setText(label)
+
+            self.mainForm.gridLayout_Colors.addWidget(label_color,i,0, Qt.AlignCenter)
+            self.mainForm.gridLayout_Colors.addWidget(label_text,i,2)
+
     def generateFileName(self):
         dt = datetime.now()
         self.filename = dt.strftime('%y%m%d-%H%M%S') + str(dt.microsecond)[:3]
@@ -98,12 +208,12 @@ class MainWindow(QMainWindow):
     def retrieveFrames(self):
         if self.leftFrame is None or self.rightFrame is None:
             return None, None
-        self.isProcessing = True
+        self.isDisparityProcessing = True
         leftFrame = self.leftFrame
         rightFrame = self.rightFrame
         self.leftFrame = None
         self.rightFrame = None
-        self.isProcessing = False
+        self.isDisparityProcessing = False
         return leftFrame, rightFrame
 
     def thread_cam_run(self):
@@ -134,7 +244,7 @@ class MainWindow(QMainWindow):
         if leftFrame is None or rightFrame is None:
             return
         
-        while self.isProcessing:
+        while self.isDisparityProcessing:
             QThread.sleep(1)
         self.leftFrame = leftFrame
         self.rightFrame = rightFrame
@@ -175,6 +285,57 @@ class MainWindow(QMainWindow):
                 self.resize_image(result["disparity"], 320, 240)))
         self.mainForm.cam_disparity.setPixmap(pixmap)
         self.mainForm.cam_disparity.update()
+
+        if self.mainForm.checkBox_saveImages.isChecked():
+            if not os.path.exists(self.savedImageDir):
+                os.mkdir(self.savedImageDir)
+            filename = self.generateFileName()
+            cv2.imwrite('{}/color-{}.png'.format(self.savedImageDir, filename), result['image'])
+            cv2.imwrite('{}/depth-{}.png'.format(self.savedImageDir, filename), result['disparity'])
+            cv2.imwrite('{}/merged-{}.png'.format(self.savedImageDir, filename), result['rgbd'])
+
+        while self.isRemapping:
+            QThread.sleep(1)
+        
+        self.isRemapping = True
+        self.remapResult = result
+        self.isRemapping = False
+
+    def thread_detecting_run(self):
+        if self.detectMode == 0:
+            return
+
+        while self.isRemapping:
+            QThread.sleep(1)
+
+        if self.remapResult is None:
+            return
+
+        self.isRemapping = True
+        result = self.remapResult
+        self.isRemapping = False
+
+        if self.detectMode == 1:
+            img = result['image']
+        elif self.detectMode == 2:
+            img = result['rgbd']
+        else:
+            return
+            
+        while self.detector.isDetecting:
+            QThread.sleep(1)
+        r = self.detector.detect([img])[0]
+        if r['rois'].shape[0] == r['masks'].shape[-1] == r['class_ids'].shape[0] > 0:
+            img = self.detector.get_instances_image(img[...,:3], r['rois'],
+                r['masks'], r['class_ids'],
+                r['scores'])
+        pixmap = QtGui.QPixmap(
+            self.convert_image_to_QImage(
+                self.resize_image(img, 320, 240)))
+        self.mainForm.cam_detect.setPixmap(pixmap)
+        self.mainForm.cam_detect.update()
+        return
+
 
     def crop_image(self, img, width, height):
         size = img.shape[:2][::-1]
