@@ -91,7 +91,7 @@ def load_class(dataset_dir):
     return mappedClasses
     
             
-def train(model, classes):
+def train(model, classes, layers='all'):
     """Train the model."""
     # Training dataset.
     dataset_train = InjeAIDataset()
@@ -111,7 +111,7 @@ def train(model, classes):
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=config.EPOCH,
-                layers='all')
+                layers=layers)
 
 
 def color_splash(image, mask):
@@ -245,6 +245,10 @@ if __name__ == '__main__':
                         type=float,
                         metavar="LearningRate(float 0~1)",
                         help="Learning Rate (default: 0.001)")
+    parser.add_argument('--layers', required=False,
+                        default='all',
+                        metavar="Layers for training",
+                        help='type layers(all, 4+, ...) for training')
     args = parser.parse_args()
 
     # Validate arguments
@@ -327,7 +331,7 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model, classes)
+        train(model, classes, args.layers)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
                                 video_path=args.video)

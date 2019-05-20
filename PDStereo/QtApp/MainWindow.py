@@ -82,10 +82,9 @@ class MainWindow(QMainWindow):
         self.weightPath_RGB = None
         self.weightPath_RGBD = None
 
-        self.detector = Detector(InjeAI.load_class("DL/datasets/objects/rgbd/"))
-        labels = self.detector.class_names[1:]
-        colors = self.detector.colors
-        self.drawColorMapToGridLayout(labels, colors)
+        self.detector_rgb = Detector(InjeAI.load_class("DL/datasets/objects/rgb/"))
+        self.detector_rgbd = Detector(InjeAI.load_class("DL/datasets/objects/rgbd/"))
+        self.detector = None
 
         self.stereo = Stereo("DL/StereoFiles")
         self.savedImageDir = "DL/SavedImages"
@@ -123,10 +122,18 @@ class MainWindow(QMainWindow):
             if not self.fileDialog.exec_():
                 return
             self.weightPath_RGB = self.fileDialog.selectedFiles()[0]
+            self.detector_rgb.load_weights(self.weightPath_RGB, channel=3)
+
         self.detectMode = 0
-        while self.detector.isDetecting:
-            QThread.sleep(1)
-        self.detector.load_weights(self.weightPath_RGB, channel=3)
+        if self.detector:
+            while self.detector.isDetecting:
+                QThread.sleep(1)
+
+        self.detector = self.detector_rgb
+        labels = self.detector.class_names[1:]
+        colors = self.detector.colors
+        self.drawColorMapToGridLayout(labels, colors)
+        
         self.mainForm.label_detecting.setText(os.path.basename(self.weightPath_RGB))
         self.detectMode = 1
 
@@ -137,10 +144,17 @@ class MainWindow(QMainWindow):
             if not self.fileDialog.exec_():
                 return
             self.weightPath_RGBD = self.fileDialog.selectedFiles()[0]
+            self.detector_rgbd.load_weights(self.weightPath_RGBD, channel=4)
         self.detectMode = 0
-        while self.detector.isDetecting:
-            QThread.sleep(1)
-        self.detector.load_weights(self.weightPath_RGBD, channel=4)
+        if self.detector:
+            while self.detector.isDetecting:
+                QThread.sleep(1)
+        
+        self.detector = self.detector_rgbd
+        labels = self.detector.class_names[1:]
+        colors = self.detector.colors
+        self.drawColorMapToGridLayout(labels, colors)
+
         self.mainForm.label_detecting.setText(os.path.basename(self.weightPath_RGBD))
         self.detectMode = 2
 
