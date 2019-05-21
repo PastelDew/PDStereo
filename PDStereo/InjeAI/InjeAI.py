@@ -277,7 +277,7 @@ if __name__ == '__main__':
     
 
     # Configurations
-    classes = load_Class(args.dataset)
+    classes = load_class(args.dataset)
     num_classes = len(classes) + 1 # + BG
     if args.command == "train":
         config = InjeAIConfig(args.channels, args.epoch, args.steps, args.lr, num_classes)
