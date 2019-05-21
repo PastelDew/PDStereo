@@ -50,7 +50,7 @@ COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
-DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
+DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "DL/logs")
 
 def load_class(dataset_dir):
     # annotation file paths which are xml
@@ -231,12 +231,12 @@ if __name__ == '__main__':
                         metavar="true or false",
                         help='If you want to use pre-trained weights with different channels then set this option to true.')
     parser.add_argument('--epoch', required=False,
-                        default=30,
+                        default=100,
                         type=int,
                         metavar="The number of epoch(default: 30)",
                         help="The number of epoch")
     parser.add_argument('--steps', required=False,
-                        default=100,
+                        default=1000,
                         type=int,
                         metavar="The number of steps per epoch(default: 100)",
                         help="The number of steps per epoch")

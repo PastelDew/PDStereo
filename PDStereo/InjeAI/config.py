@@ -27,7 +27,7 @@ class InjeAIConfig(Config):
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
 
-    def __init__(self, channel = 3, epoch = 30, steps_per_epoch = 100, learning_rate = 0.001, num_of_classes = 2):
+    def __init__(self, channel = 3, epoch = 100, steps_per_epoch = 1000, learning_rate = 0.001, num_of_classes = 2):
         assert channel == 3 or channel == 4, "The channel must be 1, 3 or 4! Given: {}".format(channel)
         self.NUM_CLASSES = num_of_classes
         self.IMAGE_CHANNEL_COUNT = channel
