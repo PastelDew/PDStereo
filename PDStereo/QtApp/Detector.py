@@ -53,6 +53,8 @@ class Detector():
     def load_weights(self, path, channel):
         self.channel = channel
         self.config = self.inference_config(channel=channel, num_of_classes=self.num_of_classes)
+        #if channel == 4:
+        #    self.config.MEAN_PIXEL[3] = 255
         self.config.display()
         self.model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR,
                             config=self.config)
@@ -60,6 +62,8 @@ class Detector():
         self.model.keras_model._make_predict_function()
 
     def detect(self, images):
+        if self.isDetecting:
+            return None
         self.isDetecting = True
         #results = self.model.detect(images, verbose=1)
         results = self.model.detect(images)

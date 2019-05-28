@@ -125,9 +125,12 @@ class MainWindow(QMainWindow):
             self.detector_rgb.load_weights(self.weightPath_RGB, channel=3)
 
         self.detectMode = 0
+        prevDetector = None
         if self.detector:
+            prevDetector = self.detector
             while self.detector.isDetecting:
                 QThread.sleep(1)
+            prevDetector.isDetecting = True
 
         self.detector = self.detector_rgb
         labels = self.detector.class_names[1:]
@@ -135,6 +138,8 @@ class MainWindow(QMainWindow):
         self.drawColorMapToGridLayout(labels, colors)
         
         self.mainForm.label_detecting.setText(os.path.basename(self.weightPath_RGB))
+        if prevDetector:
+            prevDetector.isDetecting = False
         self.detectMode = 1
 
     def event_btn_detect_rgbd_clicked(self):
@@ -146,9 +151,12 @@ class MainWindow(QMainWindow):
             self.weightPath_RGBD = self.fileDialog.selectedFiles()[0]
             self.detector_rgbd.load_weights(self.weightPath_RGBD, channel=4)
         self.detectMode = 0
+        prevDetector = None
         if self.detector:
+            prevDetector = self.detector
             while self.detector.isDetecting:
                 QThread.sleep(1)
+            prevDetector.isDetecting = True
         
         self.detector = self.detector_rgbd
         labels = self.detector.class_names[1:]
@@ -156,6 +164,8 @@ class MainWindow(QMainWindow):
         self.drawColorMapToGridLayout(labels, colors)
 
         self.mainForm.label_detecting.setText(os.path.basename(self.weightPath_RGBD))
+        if prevDetector:
+            prevDetector.isDetecting = False
         self.detectMode = 2
 
     def event_spinBox_cam_left_changed(self):
@@ -234,23 +244,23 @@ class MainWindow(QMainWindow):
         leftFrame, rightFrame = None, None
         if self.left_cam != None and self.left_cam.grab():
             _, leftFrame = self.left_cam.retrieve()
-            if leftFrame is not None:
+            if leftFrame is not None and self.imgVisibleCnt == 0 \
+                and not self.mainForm.checkBox_show_remap.isChecked():
                 pixmap = QtGui.QPixmap(
                     self.convert_image_to_QImage(
                         self.resize_image(leftFrame, 320, 240)))
-                if self.imgVisibleCnt == 0:
-                    self.mainForm.cam_left.setPixmap(pixmap)
-                    self.mainForm.cam_left.update()
+                self.mainForm.cam_left.setPixmap(pixmap)
+                self.mainForm.cam_left.update()
 
         if self.right_cam != None and self.right_cam.grab():
             _, rightFrame = self.right_cam.retrieve()
-            if rightFrame is not None:
+            if rightFrame is not None and self.imgVisibleCnt == 0 \
+                and not self.mainForm.checkBox_show_remap.isChecked():
                 pixmap = QtGui.QPixmap(
                     self.convert_image_to_QImage(
                         self.resize_image(rightFrame, 320, 240)))
-                if self.imgVisibleCnt == 0:
-                    self.mainForm.cam_right.setPixmap(pixmap)
-                    self.mainForm.cam_right.update()
+                self.mainForm.cam_right.setPixmap(pixmap)
+                self.mainForm.cam_right.update()
 
         if self.imgVisibleCnt > 0:
             self.imgVisibleCnt = self.imgVisibleCnt - 1
@@ -287,12 +297,30 @@ class MainWindow(QMainWindow):
             self.isCallibrating = False
 
         if self.isStereoCallibrating:
-            self.stereo.stereoCallibrate(leftFrame.shape[:2][::-1])
+            rectifyScale = 0
+            if self.mainForm.checkBox_show_remap.isChecked():
+                rectifyScale = 1
+            self.stereo.stereoCallibrate(leftFrame.shape[:2][::-1], rectifyScale=rectifyScale)
             self.isStereoCallibrating = False
-
+        
         result = self.stereo.stereoMatching(leftFrame, rightFrame)
         if result is None:
             return
+        
+        if self.mainForm.checkBox_show_remap.isChecked():
+            orig = result['original']
+            pixmap = QtGui.QPixmap(
+                self.convert_image_to_QImage(
+                    self.resize_image(orig["left_remap"], 320, 240)))
+            self.mainForm.cam_left.setPixmap(pixmap)
+            self.mainForm.cam_left.update()
+
+            pixmap = QtGui.QPixmap(
+                self.convert_image_to_QImage(
+                    self.resize_image(orig["right_remap"], 320, 240)))
+            self.mainForm.cam_right.setPixmap(pixmap)
+            self.mainForm.cam_right.update()
+
         result = result['result']
         pixmap = QtGui.QPixmap(
             self.convert_image_to_QImage(
@@ -337,12 +365,26 @@ class MainWindow(QMainWindow):
             return
             
         while self.detector.isDetecting:
-            QThread.sleep(1)
+            QThread.sleep(100)
+        if not (self.detectMode == 1 and self.detector is self.detector_rgb) \
+            and not (self.detectMode == 2 and self.detector is self.detector_rgbd):
+            return
+            
         r = self.detector.detect([img])[0]
         if r['rois'].shape[0] == r['masks'].shape[-1] == r['class_ids'].shape[0] > 0:
             img = self.detector.get_instances_image(img[...,:3], r['rois'],
                 r['masks'], r['class_ids'],
                 r['scores'])
+            if self.mainForm.checkBox_save_detected_image.isChecked():
+                filename = self.generateFileName()
+                path = "DL/Detected/"
+                if self.detectMode == 1:
+                    path += "rgb/"
+                else:
+                    path += "rgbd/"
+                if not (os.path.exists(path)):
+                    os.makedirs(path)
+                cv2.imwrite(path + filename + ".png", img)
         pixmap = QtGui.QPixmap(
             self.convert_image_to_QImage(
                 self.resize_image(img, 320, 240)))

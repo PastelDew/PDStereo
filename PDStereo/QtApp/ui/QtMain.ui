@@ -145,6 +145,32 @@ border-color: rgb(0, 0, 0);</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QCheckBox" name="checkBox_show_remap">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>250</y>
+      <width>171</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show Remapped Images</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_save_detected_image">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>530</y>
+      <width>171</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Save detected images</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -219,7 +245,7 @@ border-color: rgb(0, 0, 0);</string>
        <rect>
         <x>10</x>
         <y>20</y>
-        <width>201</width>
+        <width>202</width>
         <height>71</height>
        </rect>
       </property>
