@@ -36,7 +36,7 @@ class Stereo():
 
         self.isStereoCalibrated = False
 
-    def callibrateCamAndSave(self, leftFrame, rightFrame, corner_size, filename):
+    def calibrateCamAndSave(self, leftFrame, rightFrame, corner_size, filename):
         assert type(corner_size) is tuple
         img_gray_left, objp_left, corner_left, ret_left \
             = cb.findChessboardCorners(leftFrame, corner_size)
@@ -91,7 +91,7 @@ class Stereo():
 
         return cal_left, cal_right
 
-    def stereoCallibrate(self, imgSize, rectifyScale = 0): # 0=full crop, 1=no crop
+    def stereoCalibrate(self, imgSize, rectifyScale = 0): # 0=full crop, 1=no crop
         if not (os.path.exists(self.cam_params_left_path)\
                 and os.path.exists(self.cam_params_right_path)):
             return False
@@ -135,7 +135,7 @@ class Stereo():
     def stereoMatching(self, leftFrame, rightFrame, filename='untitled', savePointClound=False, rectifyScale=0):
         imgSize = leftFrame.shape[:2][::-1]
         if not self.isStereoCalibrated:
-            if not self.stereoCallibrate(imgSize, rectifyScale):
+            if not self.stereoCalibrate(imgSize, rectifyScale):
                 return None
 
         leftMaps = cv2.initUndistortRectifyMap(

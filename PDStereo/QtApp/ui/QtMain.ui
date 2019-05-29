@@ -283,12 +283,12 @@ border-color: rgb(0, 0, 0);</string>
         </layout>
        </item>
        <item>
-        <widget class="QPushButton" name="btn_callibration">
+        <widget class="QPushButton" name="btn_calibration">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(221, 221, 221);</string>
          </property>
          <property name="text">
-          <string>Callibration</string>
+          <string>Calibration</string>
          </property>
         </widget>
        </item>
@@ -416,7 +416,7 @@ border-color: rgb(0, 0, 0);</string>
       </layout>
      </widget>
     </widget>
-    <widget class="QPushButton" name="btn_stereoCallibration">
+    <widget class="QPushButton" name="btn_stereoCalibration">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -429,7 +429,7 @@ border-color: rgb(0, 0, 0);</string>
       <string notr="true">background-color: rgb(221, 221, 221);</string>
      </property>
      <property name="text">
-      <string>Stereo Callibration</string>
+      <string>Stereo Calibration</string>
      </property>
     </widget>
     <widget class="QGroupBox" name="groupBox_Colors">

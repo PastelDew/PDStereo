@@ -24,8 +24,8 @@ class MainWindow(QMainWindow):
         mainForm.spinBox_cam_left.valueChanged.connect(self.event_spinBox_cam_left_changed)
         mainForm.spinBox_cam_right.valueChanged.connect(self.event_spinBox_cam_right_changed)
 
-        mainForm.btn_callibration.clicked.connect(self.event_callibration_clicked)
-        mainForm.btn_stereoCallibration.clicked.connect(self.event_stereoCallibration_clicked)
+        mainForm.btn_calibration.clicked.connect(self.event_calibration_clicked)
+        mainForm.btn_stereoCalibration.clicked.connect(self.event_stereoCalibration_clicked)
         mainForm.btn_camcnt_refresh.clicked.connect(self.event_btn_camcnt_refresh)
         mainForm.btn_detect_rgb.clicked.connect(self.event_btn_detect_rgb_clicked)
         mainForm.btn_detect_rgbd.clicked.connect(self.event_btn_detect_rgbd_clicked)
@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
 
         self.isDisparityProcessing = False
-        self.isCallibrating = False
-        self.isStereoCallibrating = False
+        self.isCalibrating = False
+        self.isStereoCalibrating = False
         self.isRemapping = False
         self.imgVisibleCnt = 0
         self.detectMode = 0
@@ -195,11 +195,11 @@ class MainWindow(QMainWindow):
         self.corner_size = (self.mainForm.spinBox_corner_X.value(),
                             self.mainForm.spinBox_corner_Y.value())
 
-    def event_callibration_clicked(self):
-        self.isCallibrating = True
+    def event_calibration_clicked(self):
+        self.isCalibrating = True
 
-    def event_stereoCallibration_clicked(self):
-        self.isStereoCallibrating = True
+    def event_stereoCalibration_clicked(self):
+        self.isStereoCalibrating = True
 
     def drawColorMapToGridLayout(self, labels, colors):
         for i in reversed(range(self.mainForm.gridLayout_Colors.count())):
@@ -280,8 +280,8 @@ class MainWindow(QMainWindow):
 
         filename = self.generateFileName()
 
-        if self.isCallibrating:
-            cal_left, cal_right = self.stereo.callibrateCamAndSave(leftFrame, rightFrame, self.corner_size, filename)
+        if self.isCalibrating:
+            cal_left, cal_right = self.stereo.calibrateCamAndSave(leftFrame, rightFrame, self.corner_size, filename)
             if cal_left is not None and cal_right is not None:
                 cal_left = self.convert_image_to_QImage(
                     self.resize_image(cal_left, 320, 240))
@@ -294,14 +294,14 @@ class MainWindow(QMainWindow):
                 self.mainForm.cam_right.setPixmap(pxm_right)
                 self.mainForm.cam_right.update()
                 self.imgVisibleCnt = 120
-            self.isCallibrating = False
+            self.isCalibrating = False
 
-        if self.isStereoCallibrating:
+        if self.isStereoCalibrating:
             rectifyScale = 0
             if self.mainForm.checkBox_show_remap.isChecked():
                 rectifyScale = 1
-            self.stereo.stereoCallibrate(leftFrame.shape[:2][::-1], rectifyScale=rectifyScale)
-            self.isStereoCallibrating = False
+            self.stereo.stereoCalibrate(leftFrame.shape[:2][::-1], rectifyScale=rectifyScale)
+            self.isStereoCalibrating = False
         
         result = self.stereo.stereoMatching(leftFrame, rightFrame)
         if result is None:
