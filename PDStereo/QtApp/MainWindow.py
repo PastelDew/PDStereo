@@ -6,11 +6,15 @@ import numpy as np
 from PyQt5.QtCore import *
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PDStereo.QtApp.QtUI.QtMain import Ui_MainWindow
+
 from PDStereo.Camera import CameraInfo
 from PDStereo.Camera.Stereo import Stereo
-from PDStereo.QtApp.Detector import Detector
 from PDStereo.InjeAI import InjeAI
+
+from PDStereo.QtApp.QtUI.QtMain import Ui_MainWindow
+from PDStereo.QtApp.QtUI.QtTestWindow import Ui_TestWindow
+from PDStereo.QtApp.Detector import Detector
+from PDStereo.QtApp.TestDialog import TestDialog
 
 import qimage2ndarray
 
@@ -20,6 +24,8 @@ class MainWindow(QMainWindow):
         
         #Connect events
         mainForm.actionExit.triggered.connect(self.close)
+
+        mainForm.actionTest_Window.triggered.connect(self.event_actionTest_Window_clicked)
 
         mainForm.spinBox_cam_left.valueChanged.connect(self.event_spinBox_cam_left_changed)
         mainForm.spinBox_cam_right.valueChanged.connect(self.event_spinBox_cam_right_changed)
@@ -108,6 +114,14 @@ class MainWindow(QMainWindow):
         if self.right_cam != None:
             self.right_cam.release()
         cv2.destroyAllWindows()
+
+    def event_actionTest_Window_clicked(self):
+        testDialog = TestDialog()
+        mainForm = Ui_TestWindow()
+        mainForm.setupUi(testDialog)
+        mainForm.retranslateUi(testDialog)
+        testDialog.initialize(mainForm)
+        testDialog.exec_()
 
     def event_btn_camcnt_refresh(self):
         self.available_cam_count = CameraInfo.getAvailableCameraCount()
