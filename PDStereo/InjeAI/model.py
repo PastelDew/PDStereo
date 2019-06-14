@@ -544,8 +544,10 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
             batch_rpn_bbox[b] = rpn_bbox
             if depth_image_used:
                 batch_images[b] = mold_image(image[...,:3].astype(np.float32), AttrDict({"MEAN_PIXEL": np.array(config.MEAN_PIXEL[:3])}))
+                depth_image = np.resize(image[...,3], ((image.shape[:2]) + (1,)))
+                print("DEPTH SHAPE:", depth_image.shape)
                 batch_depth_images[b] = mold_image(
-                    np.resize(image[...,3], ((image.shape[:2]) + (1,))).astype(np.float32),
+                    depth_image.astype(np.float32),
                     AttrDict({"MEAN_PIXEL": np.array([config.MEAN_PIXEL[3]])}))
             else:
                 batch_images[b] = mold_image(image.astype(np.float32), config)
