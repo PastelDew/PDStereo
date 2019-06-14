@@ -2801,6 +2801,7 @@ def mold_image(images, config):
     the mean pixel and converts it to float. Expects image
     colors in RGB order.
     """
+    print(images.shape, config.MEAN_PIXEL)
     return images.astype(np.float32) - config.MEAN_PIXEL
 
 
