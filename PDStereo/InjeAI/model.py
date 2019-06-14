@@ -501,7 +501,7 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
 
                 if depth_image_used:
                     batch_images = np.zeros(
-                        (batch_size,) + image.shape[...,:2] + (3,), dtype=np.float32)
+                        (batch_size,) + image.shape[:2] + (3,), dtype=np.float32)
                     batch_depth_images = np.zeros(
                         (batch_size,) + (1,), dtype=np.float32
                     )
