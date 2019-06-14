@@ -112,7 +112,7 @@ class PDMaskRCNN(MaskRCNN):
 
         if depth_image_used:
             P5_d = KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c5p5_d')(C5_d)
-            P4_d = KL.Add(name="fpn_p4_d")([
+            P4_d = KL.Add(name="fpn_p4add_d")([
                 KL.UpSampling2D(size=(2, 2), name="fpn_p5upsampled_d")(P5_d),
                 KL.Conv2D(config.TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c4p4_d')(C4_d)
             ])
