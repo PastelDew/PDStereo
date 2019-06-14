@@ -75,6 +75,7 @@ class PDMaskRCNN(MaskRCNN):
                                                 train_bn=config.TRAIN_BN)
             if depth_image_used:
                 _, C2_d, C3_d, C4_d, C5_d = config.BACKBONE(input_depth_image,
+                                                            config.BACKBONE,
                                                             stage5=True,
                                                             train_bn=config.TRAIN_BN)
         else:
@@ -82,6 +83,7 @@ class PDMaskRCNN(MaskRCNN):
                                              stage5=True, train_bn=config.TRAIN_BN)
             if depth_image_used:
                 _, C2_d, C3_d, C4_d, C5_d = resnet_graph(input_depth_image,
+                                                        config.BACKBONE,
                                                         stage5=True,
                                                         train_bn=config.TRAIN_BN)
         # Top-down Layers
