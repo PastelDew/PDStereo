@@ -338,7 +338,8 @@ class MainWindow(QMainWindow):
         result = result['result']
         pixmap = QtGui.QPixmap(
             self.convert_image_to_QImage(
-                self.resize_image(result["disparity"], 320, 240)))
+                self.resize_image(result["weighted_depth"], 320, 240)))
+                #self.resize_image(result["disparity"], 320, 240)))
         self.mainForm.cam_disparity.setPixmap(pixmap)
         self.mainForm.cam_disparity.update()
 
@@ -348,6 +349,7 @@ class MainWindow(QMainWindow):
             filename = self.generateFileName()
             cv2.imwrite('{}/color-{}.png'.format(self.savedImageDir, filename), result['image'])
             cv2.imwrite('{}/depth-{}.png'.format(self.savedImageDir, filename), result['disparity'])
+            cv2.imwrite('{}/weighted_depth-{}.png'.format(self.savedImageDir, filename), result['weighted_depth'])
             cv2.imwrite('{}/merged-{}.png'.format(self.savedImageDir, filename), result['rgbd'])
 
         while self.isRemapping:

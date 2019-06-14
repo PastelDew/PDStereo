@@ -61,6 +61,9 @@ class Detector():
         self.model.load_weights(path, by_name=True)
         self.model.keras_model._make_predict_function()
 
+        from keras.utils import plot_model
+        plot_model(self.model.keras_model, to_file="test.png")
+
     def detect(self, images):
         if self.isDetecting:
             return None

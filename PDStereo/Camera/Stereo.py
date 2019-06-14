@@ -198,7 +198,13 @@ class Stereo():
         if savePointClound:
             ut.savePointClound(filename, left_img_remap, disparity, Q, imgSize)
 
-        rgbd = np.dstack((img_left_ROI, img_disparity_ROI))
+        edge_rgb = self.create_edge_image(cv2.cvtColor(img_left_ROI, cv2.COLOR_BGR2GRAY))
+        edge_depth = self.create_edge_image(img_disparity_ROI)
+        weighted_edge = self.create_weighted_image(edge_rgb, edge_depth)
+        weighted_depth = self.create_weighted_image(img_disparity_ROI, weighted_edge)
+
+        #rgbd = np.dstack((img_left_ROI, img_disparity_ROI))
+        rgbd = np.dstack((img_left_ROI, weighted_depth))
 
         return {
             "original": {
@@ -209,6 +215,16 @@ class Stereo():
             "result": {
                 "image": img_left_ROI,
                 "disparity": img_disparity_ROI,
+                'weighted_depth': weighted_depth,
                 "rgbd": rgbd
             }
         }
+
+    def create_edge_image(self, image, ksize=3):
+        edgeImage_X = cv2.Sobel(image, cv2.CV_8U, 1, 0, ksize=ksize)
+        edgeImage_Y = cv2.Sobel(image, cv2.CV_8U, 0, 1, ksize=ksize)
+        edgeImage = cv2.addWeighted(edgeImage_X, 1, edgeImage_Y, 1, 0)
+        return edgeImage
+    
+    def create_weighted_image(self, img1, img2):
+        return cv2.addWeighted(img1, 1, img2, 1, 0)

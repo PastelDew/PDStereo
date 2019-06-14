@@ -33,6 +33,7 @@ import xml.etree.ElementTree as et
 
 from PDStereo.InjeAI.config import InjeAIConfig
 from PDStereo.InjeAI.dataset import InjeAIDataset
+from PDStereo.InjeAI.model import PDMaskRCNN
 
 import tensorflow as tf
 from keras import backend as k
@@ -292,11 +293,15 @@ if __name__ == '__main__':
 
     # Create model
     if args.command == "train":
-        model = modellib.MaskRCNN(mode="training", config=config,
-                                  model_dir=args.logs)
+        #model = modellib.MaskRCNN(mode="training", config=config,
+        #                          model_dir=args.logs)
+        model = PDMaskRCNN(mode="training", config=config,
+                            model_dir=args.logs)
     else:
-        model = modellib.MaskRCNN(mode="inference", config=config,
-                                  model_dir=args.logs)
+        #model = modellib.MaskRCNN(mode="inference", config=config,
+        #                          model_dir=args.logs)
+        model = PDMaskRCNN(mode="inference", config=config,
+                            model_dir=args.logs)
 
     # Select weights file to load
     if args.weights.lower() == "coco":
