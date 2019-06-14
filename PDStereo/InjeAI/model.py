@@ -543,8 +543,8 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
             batch_rpn_match[b] = rpn_match[:, np.newaxis]
             batch_rpn_bbox[b] = rpn_bbox
             if depth_image_used:
-                batch_images[b] = mold_image(image[:3].astype(np.float32), AttrDict({"MEAN_PIXEL": np.array(config.MEAN_PIXEL[:3])}))
-                batch_depth_images[b] = mold_image(image[3].astype(np.float32), AttrDict({"MEAN_PIXEL": np.array([config.MEAN_PIXEL[3]])}))
+                batch_images[b] = mold_image(image[...,:3].astype(np.float32), AttrDict({"MEAN_PIXEL": np.array(config.MEAN_PIXEL[:3])}))
+                batch_depth_images[b] = mold_image(image[...,3].astype(np.float32), AttrDict({"MEAN_PIXEL": np.array([config.MEAN_PIXEL[3]])}))
             else:
                 batch_images[b] = mold_image(image.astype(np.float32), config)
             batch_gt_class_ids[b, :gt_class_ids.shape[0]] = gt_class_ids
