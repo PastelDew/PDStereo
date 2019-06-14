@@ -546,7 +546,7 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
                 batch_images[b] = mold_image(image[...,:3].astype(np.float32), AttrDict({"MEAN_PIXEL": np.array(config.MEAN_PIXEL[:3])}))
                 depth_image = np.resize(image[...,3], ((image.shape[:2]) + (1,)))
                 attrDict_MP = AttrDict({"MEAN_PIXEL": np.array([config.MEAN_PIXEL[3]])})
-                print("DEPTH SHAPE:", depth_image.shape, attrDict_MP.shape)
+                print("DEPTH SHAPE:", depth_image.shape, attrDict_MP.MEAN_PIXEL.shape)
                 batch_depth_images[b] = mold_image(
                     depth_image.astype(np.float32),
                     attrDict_MP)
