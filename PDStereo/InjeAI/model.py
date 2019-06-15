@@ -389,6 +389,121 @@ class PDMaskRCNN(MaskRCNN):
         )
         self.epoch = max(self.epoch, epochs)
 
+    def detect(self, images, verbose=0):
+        """Runs the detection pipeline.
+
+        images: List of images, potentially of different sizes.
+
+        Returns a list of dicts, one dict per image. The dict contains:
+        rois: [N, (y1, x1, y2, x2)] detection bounding boxes
+        class_ids: [N] int class IDs
+        scores: [N] float probability scores for the class IDs
+        masks: [H, W, N] instance binary masks
+        """
+        assert self.mode == "inference", "Create model in inference mode."
+        assert len(
+            images) == self.config.BATCH_SIZE, "len(images) must be equal to BATCH_SIZE"
+
+        if verbose:
+            log("Processing {} images".format(len(images)))
+            for image in images:
+                log("image", image)
+
+        # Mold inputs to format expected by the neural network
+        depth_image_used = images[0].shape[-1] == 4
+        if depth_image_used:
+            molded_images, molded_depth_images, image_metas, windows =\
+                self.mold_inputs_with_depth(images)
+        else:
+            molded_images, image_metas, windows = self.mold_inputs(images)
+
+        # Validate image sizes
+        # All images in a batch MUST be of the same size
+        image_shape = molded_images[0].shape
+        
+        for g in molded_images[1:]:
+            assert g.shape == image_shape,\
+                "After resizing, all images must have the same size. Check IMAGE_RESIZE_MODE and image sizes."
+
+        image_shape = image_shape[:2] + (4,)
+
+        # Anchors
+        anchors = self.get_anchors(image_shape)
+        # Duplicate across the batch dimension because Keras requires it
+        # TODO: can this be optimized to avoid duplicating the anchors?
+        anchors = np.broadcast_to(anchors, (self.config.BATCH_SIZE,) + anchors.shape)
+
+        if verbose:
+            log("molded_images", molded_images)
+            log("image_metas", image_metas)
+            log("anchors", anchors)
+        # Run object detection
+        if depth_image_used:
+            detections, _, _, mrcnn_mask, _, _, _ =\
+                self.keras_model.predict([molded_images, image_metas, anchors, molded_depth_images], verbose=1)
+        else:
+            detections, _, _, mrcnn_mask, _, _, _ =\
+                self.keras_model.predict([molded_images, image_metas, anchors], verbose=0)
+        print(detections)
+        # Process detections
+        results = []
+        for i, image in enumerate(images):
+            final_rois, final_class_ids, final_scores, final_masks =\
+                self.unmold_detections(detections[i], mrcnn_mask[i],
+                                       image.shape, molded_images[i].shape,
+                                       windows[i])
+            results.append({
+                "rois": final_rois,
+                "class_ids": final_class_ids,
+                "scores": final_scores,
+                "masks": final_masks,
+            })
+        print("RESULTS:", results)
+        return results
+
+    def mold_inputs_with_depth(self, images):
+        """Takes a list of images and modifies them to the format expected
+        as an input to the neural network.
+        images: List of image matrices [height,width,depth]. Images can have
+            different sizes.
+
+        Returns 3 Numpy matrices:
+        molded_images: [N, h, w, 3]. Images resized and normalized.
+        image_metas: [N, length of meta data]. Details about each image.
+        windows: [N, (y1, x1, y2, x2)]. The portion of the image that has the
+            original image (padding excluded).
+        """
+        molded_images = []
+        molded_depth_images = []
+        image_metas = []
+        windows = []
+        for image in images:
+            # Resize image
+            # TODO: move resizing to mold_image()
+            assert image.shape[-1] == 4, "This function support 4 channels image only."
+            molded_image, window, scale, padding, crop = utils.resize_image(
+                image,
+                min_dim=self.config.IMAGE_MIN_DIM,
+                min_scale=self.config.IMAGE_MIN_SCALE,
+                max_dim=self.config.IMAGE_MAX_DIM,
+                mode=self.config.IMAGE_RESIZE_MODE)
+            molded_image = mold_image(molded_image, self.config)
+            # Build image_meta
+            image_meta = compose_image_meta(
+                0, image.shape, molded_image.shape, window, scale,
+                np.zeros([self.config.NUM_CLASSES], dtype=np.int32))
+            # Append
+            molded_images.append(molded_image[...,:3])
+            windows.append(window)
+            image_metas.append(image_meta)
+            molded_depth_images.append(np.resize(molded_image[...,3], ((molded_image.shape[:2]) + (1,))))
+        # Pack into arrays
+        molded_images = np.stack(molded_images)
+        image_metas = np.stack(image_metas)
+        windows = np.stack(windows)
+        molded_depth_images = np.stack(molded_depth_images)
+        return molded_images, molded_depth_images, image_metas, windows
+
 def data_generator(dataset, config, shuffle=True, augment=False, augmentation=None,
                    random_rois=0, batch_size=1, detection_targets=False,
                    no_augmentation_sources=None):

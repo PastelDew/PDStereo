@@ -1,6 +1,7 @@
 from PDStereo.InjeAI import InjeAI
 from PDStereo.InjeAI.config import InjeAIConfig
 from PDStereo.InjeAI.dataset import InjeAIDataset
+from PDStereo.InjeAI.model import PDMaskRCNN
 
 from mrcnn import utils
 from mrcnn import visualize
@@ -56,7 +57,9 @@ class Detector():
         #if channel == 4:
         #    self.config.MEAN_PIXEL[3] = 255
         self.config.display()
-        self.model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR,
+        #self.model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR,
+        #                    config=self.config)
+        self.model = PDMaskRCNN(mode="inference", model_dir=self.MODEL_DIR,
                             config=self.config)
         self.model.load_weights(path, by_name=True)
         self.model.keras_model._make_predict_function()
@@ -69,7 +72,7 @@ class Detector():
             return None
         self.isDetecting = True
         #results = self.model.detect(images, verbose=1)
-        results = self.model.detect(images)
+        results = self.model.detect(images, verbose=1)
         self.isDetecting = False
         return results
 
