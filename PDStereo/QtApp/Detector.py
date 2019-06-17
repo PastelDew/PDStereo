@@ -62,16 +62,23 @@ class Detector():
         self.model = PDMaskRCNN(mode="inference", model_dir=self.MODEL_DIR,
                             config=self.config)
         self.model.load_weights(path, by_name=True)
-        self.model.keras_model._make_predict_function()
 
-        from keras.utils import plot_model
-        plot_model(self.model.keras_model, to_file="test.png")
+        #import tensorflow as tf
+        #self.graph = tf.get_default_graph()
+        self.model.keras_model._make_predict_function()
+        self.model.rpn_rois._make_predict_function()
+
+        #from keras.utils import plot_model
+        #plot_model(self.model.keras_model, to_file="test.png")
 
     def detect(self, images):
+        results = None
         if self.isDetecting:
-            return None
+            return results
         self.isDetecting = True
         #results = self.model.detect(images, verbose=1)
+        #with self.graph.as_default():
+        #    results = self.model.detect(images, verbose=1)
         results = self.model.detect(images, verbose=1)
         self.isDetecting = False
         return results

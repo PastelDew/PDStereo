@@ -158,6 +158,7 @@ class PDMaskRCNN(MaskRCNN):
         layer_outputs = []  # list of lists
         for p in rpn_feature_maps:
             layer_outputs.append(rpn([p]))
+            
         # Concatenate layer outputs
         # Convert from list of lists of level outputs to list of lists
         # of outputs across levels.
@@ -179,6 +180,7 @@ class PDMaskRCNN(MaskRCNN):
             nms_threshold=config.RPN_NMS_THRESHOLD,
             name="ROI",
             config=config)([rpn_class, rpn_bbox, anchors])
+        self.rpn_rois = rpn_rois
 
         if mode == "training":
             # Class ID mask to mark class IDs supported by the dataset the image
@@ -273,12 +275,12 @@ class PDMaskRCNN(MaskRCNN):
                                               train_bn=config.TRAIN_BN)
 
             inputs = [input_image, input_image_meta, input_anchors]
+            outputs = [detections, mrcnn_class, mrcnn_bbox,
+                                 mrcnn_mask, rpn_rois, rpn_class, rpn_bbox]
             if depth_image_used:
                 inputs.append(input_depth_image)
-            model = KM.Model(inputs,
-                             [detections, mrcnn_class, mrcnn_bbox,
-                                 mrcnn_mask, rpn_rois, rpn_class, rpn_bbox],
-                             name='mask_rcnn')
+
+            model = KM.Model(inputs, outputs, name='mask_rcnn')
 
         # Add multi-GPU support.
         if config.GPU_COUNT > 1:
@@ -411,11 +413,12 @@ class PDMaskRCNN(MaskRCNN):
 
         # Mold inputs to format expected by the neural network
         depth_image_used = images[0].shape[-1] == 4
-        if depth_image_used:
-            molded_images, molded_depth_images, image_metas, windows =\
-                self.mold_inputs_with_depth(images)
-        else:
-            molded_images, image_metas, windows = self.mold_inputs(images)
+        #if depth_image_used:
+        #    molded_images, molded_depth_images, image_metas, windows =\
+        #        self.mold_inputs_with_depth(images)
+        #else:
+        #    molded_images, image_metas, windows = self.mold_inputs(images)
+        molded_images, image_metas, windows = self.mold_inputs(images)
 
         # Validate image sizes
         # All images in a batch MUST be of the same size
@@ -425,7 +428,7 @@ class PDMaskRCNN(MaskRCNN):
             assert g.shape == image_shape,\
                 "After resizing, all images must have the same size. Check IMAGE_RESIZE_MODE and image sizes."
 
-        image_shape = image_shape[:2] + (4,)
+        #image_shape = image_shape[:2] + (4,)
 
         # Anchors
         anchors = self.get_anchors(image_shape)
@@ -439,12 +442,36 @@ class PDMaskRCNN(MaskRCNN):
             log("anchors", anchors)
         # Run object detection
         if depth_image_used:
-            detections, _, _, mrcnn_mask, _, _, _ =\
-                self.keras_model.predict([molded_images, image_metas, anchors, molded_depth_images], verbose=1)
+            #detections, mrcnn_class, mrcnn_bbox, mrcnn_mask, rpn_rois, rpn_class, rpn_bbox
+            #detections, _, _, mrcnn_mask, _, _, _ =\
+            molded_depth_images = []
+            molded_color_images = []
+            for img in molded_images:
+                print(img.shape)
+                molded_depth_img = np.resize(img[..., 3], (img.shape[:2] + (1,)))
+                molded_color_images.append(img[..., :3])
+                molded_depth_images.append(molded_depth_img)
+            molded_color_images = np.stack(molded_color_images)
+            molded_depth_images = np.stack(molded_depth_images)
+            print(molded_images.shape)
+            detections, mrcnn_class, mrcnn_bbox, mrcnn_mask, rpn_rois, rpn_class, rpn_bbox =\
+                self.keras_model.predict([molded_color_images, image_metas, anchors, molded_depth_images], verbose=1)
+            
+            log("rpn_class", rpn_class)
+            log("rpn_bbox", rpn_bbox)
+            for clz in rpn_class[0,:,1]:
+                if clz > 0.5:
+                    print(clz)
+            print("rpn_class:", rpn_class)
+            #print(rpn_class)
+            #print(rpn_bbox)
+            print(detections.shape, mrcnn_class.shape, mrcnn_bbox.shape,
+                    mrcnn_mask.shape, rpn_rois.shape, rpn_class.shape, rpn_bbox.shape)
+            print(rpn_rois)
         else:
             detections, _, _, mrcnn_mask, _, _, _ =\
                 self.keras_model.predict([molded_images, image_metas, anchors], verbose=0)
-        print(detections)
+        #print(detections)
         # Process detections
         results = []
         for i, image in enumerate(images):
