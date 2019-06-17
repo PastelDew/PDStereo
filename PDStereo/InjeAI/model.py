@@ -139,6 +139,8 @@ class PDMaskRCNN(MaskRCNN):
         if depth_image_used:
             rpn_feature_maps += [P2_d, P3_d, P4_d, P5_d, P6_d]
             mrcnn_feature_maps += [P2_d, P3_d, P4_d, P5_d]
+        
+        print(rpn_feature_maps)
 
         # Anchors
         if mode == "training":
@@ -180,7 +182,7 @@ class PDMaskRCNN(MaskRCNN):
             nms_threshold=config.RPN_NMS_THRESHOLD,
             name="ROI",
             config=config)([rpn_class, rpn_bbox, anchors])
-        self.rpn_rois = rpn_rois
+        print("TEST")
 
         if mode == "training":
             # Class ID mask to mark class IDs supported by the dataset the image
@@ -459,18 +461,13 @@ class PDMaskRCNN(MaskRCNN):
             
             log("rpn_class", rpn_class)
             log("rpn_bbox", rpn_bbox)
-            for clz in rpn_class[0,:,1]:
-                if clz > 0.5:
-                    print(clz)
-            print("rpn_class:", rpn_class)
-            #print(rpn_class)
-            #print(rpn_bbox)
             print(detections.shape, mrcnn_class.shape, mrcnn_bbox.shape,
                     mrcnn_mask.shape, rpn_rois.shape, rpn_class.shape, rpn_bbox.shape)
-            print(rpn_rois)
+            log("rpn_rois", rpn_rois)
         else:
-            detections, _, _, mrcnn_mask, _, _, _ =\
+            detections, _, _, mrcnn_mask, rpn_rois, _, _ =\
                 self.keras_model.predict([molded_images, image_metas, anchors], verbose=0)
+            log("rpn_rois", rpn_rois)
         #print(detections)
         # Process detections
         results = []

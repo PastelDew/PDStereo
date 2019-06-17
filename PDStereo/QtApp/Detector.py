@@ -63,10 +63,10 @@ class Detector():
                             config=self.config)
         self.model.load_weights(path, by_name=True)
 
-        #import tensorflow as tf
-        #self.graph = tf.get_default_graph()
-        self.model.keras_model._make_predict_function()
-        self.model.rpn_rois._make_predict_function()
+        import tensorflow as tf
+        self.graph = tf.get_default_graph()
+        #self.model.keras_model._make_predict_function()
+        #self.model.rpn_rois._make_predict_function()
 
         #from keras.utils import plot_model
         #plot_model(self.model.keras_model, to_file="test.png")
@@ -77,9 +77,9 @@ class Detector():
             return results
         self.isDetecting = True
         #results = self.model.detect(images, verbose=1)
-        #with self.graph.as_default():
-        #    results = self.model.detect(images, verbose=1)
-        results = self.model.detect(images, verbose=1)
+        with self.graph.as_default():
+            results = self.model.detect(images, verbose=1)
+        #results = self.model.detect(images, verbose=1)
         self.isDetecting = False
         return results
 

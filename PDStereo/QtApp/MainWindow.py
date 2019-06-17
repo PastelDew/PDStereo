@@ -284,8 +284,8 @@ class MainWindow(QMainWindow):
         
         while self.isDisparityProcessing:
             QThread.sleep(1)
-        self.leftFrame = leftFrame
-        self.rightFrame = rightFrame
+        self.leftFrame = cv2.cvtColor(leftFrame, cv2.COLOR_BGRA2RGBA)
+        self.rightFrame = cv2.cvtColor(rightFrame, cv2.COLOR_BGRA2RGBA)
 
     def thread_mapping_run(self):
         leftFrame, rightFrame = self.retrieveFrames()
