@@ -284,8 +284,8 @@ class MainWindow(QMainWindow):
         
         while self.isDisparityProcessing:
             QThread.sleep(1)
-        self.leftFrame = cv2.cvtColor(leftFrame, cv2.COLOR_BGRA2RGBA)
-        self.rightFrame = cv2.cvtColor(rightFrame, cv2.COLOR_BGRA2RGBA)
+        self.leftFrame = leftFrame
+        self.rightFrame = rightFrame
 
     def thread_mapping_run(self):
         leftFrame, rightFrame = self.retrieveFrames()
@@ -388,9 +388,13 @@ class MainWindow(QMainWindow):
             
         r = self.detector.detect([img])[0]
         if r['rois'].shape[0] == r['masks'].shape[-1] == r['class_ids'].shape[0] > 0:
-            img = self.detector.get_instances_image(img[...,:3], r['rois'],
+            tempImage = np.zeros(shape=(img.shape[:2] + (3,)), dtype=np.uint8)
+            detected_image = self.detector.get_instances_image(img[...,:3], r['rois'],
                 r['masks'], r['class_ids'],
                 r['scores'])
+            masked_image = self.detector.get_instances_image(tempImage, r['rois'],
+                r['masks'], r['class_ids'],
+                r['scores'], show_bbox=False)
             if self.mainForm.checkBox_save_detected_image.isChecked():
                 filename = self.generateFileName()
                 path = "DL/Detected/"
@@ -401,9 +405,15 @@ class MainWindow(QMainWindow):
                 if not (os.path.exists(path)):
                     os.makedirs(path)
                 cv2.imwrite(path + filename + ".png", img)
-        pixmap = QtGui.QPixmap(
-            self.convert_image_to_QImage(
-                self.resize_image(img, 320, 240)))
+                cv2.imwrite(path + filename + "-detected.png", detected_image)
+                cv2.imwrite(path + filename + "-mask.png", masked_image)
+            pixmap = QtGui.QPixmap(
+                self.convert_image_to_QImage(
+                    self.resize_image(detected_image, 320, 240)))
+        else:
+            pixmap = QtGui.QPixmap(
+                self.convert_image_to_QImage(
+                    self.resize_image(img, 320, 240)))
         self.mainForm.cam_detect.setPixmap(pixmap)
         self.mainForm.cam_detect.update()
         return
