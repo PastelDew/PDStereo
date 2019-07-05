@@ -17,7 +17,7 @@ This repository is for Deep learning using Mask R-CNN. In this project, we use R
 python3 setup.py install
 ```
 
-2-1. If you want to design the UI of detecting program, then you have to install this.
+>#### If you want to design the UI of detecting program, then you have to install this.
 
 ```bash
 pip3 install pyqt-tools
