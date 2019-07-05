@@ -11,16 +11,19 @@ This repository is for Deep learning using Mask R-CNN. In this project, we use R
 ## Installation
 1. Clone this repository
 
-2. Install dependencies
-
-```bash
-pip3 install -r requirements.txt
-```
-
-3. Run setup from the repository root directory
+2. Run setup from the repository root directory
 
 ```bash
 python3 setup.py install
 ```
+
+2-1. If you want to design the UI of detecting program, then you have to install this.
+
+```bash
+pip3 install pyqt-tools
+```
+
+
+## Features
 
 Rest parts will be written later.
