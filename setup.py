@@ -5,29 +5,30 @@ The build/compilations setup
 """
 import pip
 import logging
-import pkg_resources
+import os
+import platform
+
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
 
-def _parse_requirements(file_path):
-    pip_ver = pkg_resources.get_distribution('pip').version
-    pip_version = list(map(int, pip_ver.split('.')[:2]))
-    if pip_version >= [6, 0]:
-        raw = pip.req.parse_requirements(file_path,
-                                         session=pip.download.PipSession())
-    else:
-        raw = pip.req.parse_requirements(file_path)
-    return [str(i.req) for i in raw]
+REQUIREMENTS_PATH = 'requirements.txt'
+
+def _parse_requirements():
+    global REQUIREMENTS_PATH
+    with open(REQUIREMENTS_PATH) as f:
+        requirements = f.read().strip().split('\n')
+        return requirements
 
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 try:
-    install_reqs = _parse_requirements("requirements.txt")
-except Exception:
+    install_reqs = _parse_requirements()
+except Exception as err:
     logging.warning('Fail load requirements file, so using default ones.')
+    logging.warning(err)
     install_reqs = []
 
 setup(
