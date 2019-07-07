@@ -122,12 +122,16 @@ class Stereo():
         
         self.R1, self.R2, self.P1, self.P2, self.Q, \
         self.validPixROI1, self.validPixROI2 = cv2.stereoRectify(
-            self.cam_mtx1, self.distCoeffs1,
-            self.cam_mtx2, self.distCoeffs2,
+            self.cam_mtx1, self.distCoeffs1,#cam_mtx1 첫번째 카메라 매트릭스 distcoeffs1 첫번째 카메라 왜곡 계수
+            self.cam_mtx2, self.distCoeffs2,#cam_mtx2 두번째 카메라 매트릭스 distcoeffs2 두번째 카메라 왜곡 계수
             imgSize,
-            self.R,
-            self.T,
+            self.R, #첫 번째 및 두번째 카메라의 좌표계 간의 회전 행렬
+            self.T, #카메라의 좌표 시스템간의 변환 벡터
             alpha=rectifyScale)
+        #R1, R2 첫번째 두번째 카메라의 회전 행렬
+        #P1, P2 첫번재 두번째 카메라의 새로운 정류된 좌표계에서 3*4 프로젝션 매트릭스
+        #Q 4*4 depth 차이 매핑 매트릭스
+        #stereoRectify 각각의 영상들을 교정해서 두 영상들이 행 정렬된 카메라에서 촬영된 것 처럼 바꾸는 과정
 
         self.isStereoCalibrated = True
         return True
@@ -144,7 +148,7 @@ class Stereo():
             self.R1,
             self.P1,
             imgSize,
-            cv2.CV_16SC2)
+            cv2.CV_16SC2)#initUndistortRectifyMap : 왜곡이 없는 정류 변형 맵을 계산
         rightMaps = cv2.initUndistortRectifyMap(
             self.cam_mtx2,
             self.distCoeffs2,
