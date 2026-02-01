@@ -156,61 +156,90 @@ pip3 install pyqt-tools
 
 ```
 PDStereo/
-├── DL/                 # Trained model weights (.h5 files)
-├── PDStereo/           # Main application (PyQt5 GUI)
-├── Training/           # Training scripts and configurations
-├── mrcnn/              # Mask R-CNN / Depth R-CNN core implementation
-├── assets/             # Images for documentation
-├── RGB-D.py            # Entry point for RGB-D processing
+├── DL/                     # Trained model weights (.h5 files)
+├── mrcnn/                  # Mask R-CNN core implementation
+├── PDStereo/               # Main package
+│   ├── Camera/             # Stereo camera utilities
+│   │   ├── Calibration.py  # Camera calibration functions
+│   │   ├── Stereo.py       # Stereo processing
+│   │   └── CameraInfo.py   # Camera parameters
+│   ├── InjeAI/             # Training & inference
+│   │   ├── InjeAI.py       # Main training script
+│   │   ├── model.py        # Depth R-CNN model
+│   │   ├── config.py       # Model configuration
+│   │   └── dataset.py      # Dataset loader
+│   └── QtApp/              # PyQt5 GUI application
+│       ├── AppMain.py      # Application entry point
+│       ├── MainWindow.py   # Main window logic
+│       └── Detector.py     # Detection interface
+├── assets/                 # Images for documentation
+├── RGB-D.py                # GUI launcher
 ├── requirements.txt
-└── setup.py
+├── setup.py
+└── LICENSE
 ```
 
 ## Usage
 
-### 1. Camera Calibration
+### 1. GUI Application
 
-Capture chessboard images from both cameras for calibration:
+Launch the PyQt5-based detection interface:
 
 ```bash
-python3 PDStereo/calibration.py --corner_x 9 --corner_y 6
+python3 RGB-D.py
 ```
+
+The GUI supports:
+- Dual webcam input (640×480)
+- Real-time stereo calibration and rectification
+- RGB and RGB-D detection modes
+- Class visualization with color coding
 
 ### 2. Training
 
 Prepare your dataset with LabelMe annotations (binary masks for each object), then:
 
 ```bash
-python3 Training/train.py --dataset=/path/to/dataset --weights=coco --epochs=30
+# Train with COCO pre-trained weights (RGB, 3 channels)
+python3 PDStereo/InjeAI/InjeAI.py train --dataset=/path/to/dataset --weights=coco
+
+# Train with RGB-D (4 channels)
+python3 PDStereo/InjeAI/InjeAI.py train --dataset=/path/to/dataset --weights=coco --channels=4 --exclude=True
+
+# Resume training from last checkpoint
+python3 PDStereo/InjeAI/InjeAI.py train --dataset=/path/to/dataset --weights=last
 ```
 
-**Training Parameters:**
-- Input: RGB images (3 channels) or RGB-D images (4 channels)
-- Backbone: ResNet + FPN (Feature Pyramid Network)
-- Pre-trained weights: COCO dataset
-- Resolution: 640×480
+**Training Options:**
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--channels` | 3 | Input channels (3: RGB, 4: RGB-D) |
+| `--epoch` | 100 | Number of epochs |
+| `--steps` | 1000 | Steps per epoch |
+| `--lr` | 0.001 | Learning rate |
+| `--layers` | all | Layers to train (all, 4+, 5+, heads) |
+| `--exclude` | False | Exclude conv1 when using different channel weights |
 
-### 3. Detection
+### 3. Detection (Color Splash)
 
-Run detection with the trained model:
+Apply detection visualization to images or videos:
 
 ```bash
-python3 RGB-D.py --image=/path/to/image --weights=DL/mask_rcnn.h5
+# Image detection
+python3 PDStereo/InjeAI/InjeAI.py splash --weights=/path/to/weights.h5 --image=/path/to/image.jpg
+
+# Video detection
+python3 PDStereo/InjeAI/InjeAI.py splash --weights=/path/to/weights.h5 --video=/path/to/video.mp4
 ```
 
-### 4. GUI Application
+### 4. Camera Calibration
 
-Launch the PyQt5-based detection interface:
+Camera calibration is performed through the GUI application:
 
-```bash
-python3 PDStereo/main.py
-```
-
-The GUI supports:
-- Dual webcam input (640×480)
-- Real-time stereo rectification
-- RGB and RGB-D detection modes
-- Class visualization with color coding
+1. Run `python3 RGB-D.py`
+2. Set chessboard corner size (default: 9×6)
+3. Click "Calibration" to capture calibration images
+4. Click "Stereo Calibration" to compute stereo parameters
 
 ## Model Architecture
 
