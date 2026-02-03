@@ -59,10 +59,10 @@ flowchart TB
     end
 
     subgraph Model["🧠 Depth R-CNN"]
-        RGB_FPN[RGB FPN\nBackbone]
-        Depth_FPN[Depth FPN\nBackbone]
-        RPN[Region Proposal\nNetwork]
-        Output[/"📦 Outputs:\n• Bounding Box\n• Instance Mask\n• Class Score"/]
+        RGB_FPN[RGB FPN<br/>Backbone]
+        Depth_FPN[Depth FPN<br/>Backbone]
+        RPN[Region Proposal<br/>Network]
+        Output[/"📦 Outputs:<br/>• Bounding Box<br/>• Instance Mask<br/>• Class Score"/]
     end
 
     CamA --> Rect
